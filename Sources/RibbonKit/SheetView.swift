@@ -133,3 +133,70 @@ private struct SheetOffsetKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
+
+import UIKit
+
+private enum SheetScrollRole { case leader, follower }
+
+private struct SheetLinkedScroll<Content: View>: UIViewRepresentable {
+    var axis: Axis
+    var role: SheetScrollRole
+    var content: Content
+
+    init(axis: Axis, role: SheetScrollRole, @ViewBuilder content: () -> Content) {
+        self.axis = axis
+        self.role = role
+        self.content = content()
+    }
+
+    func makeUIView(context: Context) -> UIScrollView {
+        let scroll = UIScrollView()
+        scroll.showsHorizontalScrollIndicator = role == .leader
+        scroll.showsVerticalScrollIndicator = false
+        scroll.bounces = true
+        scroll.backgroundColor = .clear
+        let host = UIHostingController(rootView: content)
+        host.view.backgroundColor = .clear
+        host.view.translatesAutoresizingMaskIntoConstraints = false
+        scroll.addSubview(host.view)
+        NSLayoutConstraint.activate([
+            host.view.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
+            host.view.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
+            host.view.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
+            host.view.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor)
+        ])
+        context.coordinator.host = host
+        if role == .leader {
+            SheetScrollLink.shared.leader = scroll
+        } else {
+            SheetScrollLink.shared.follower = scroll
+            scroll.isScrollEnabled = false
+        }
+        SheetScrollLink.shared.bind()
+        return scroll
+    }
+
+    func updateUIView(_ scroll: UIScrollView, context: Context) {
+        context.coordinator.host?.rootView = content
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    final class Coordinator {
+        var host: UIHostingController<Content>?
+    }
+}
+
+private final class SheetScrollLink {
+    static let shared = SheetScrollLink()
+    weak var leader: UIScrollView?
+    weak var follower: UIScrollView?
+    var token: NSKeyValueObservation?
+
+    func bind() {
+        guard let leader else { return }
+        token = leader.observe(\.contentOffset, options: [.new]) { [weak self] view, _ in
+            self?.follower?.contentOffset.x = view.contentOffset.x
+        }
+    }
+}
