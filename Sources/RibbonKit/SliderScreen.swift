@@ -88,6 +88,8 @@ private struct EndMillStyleRuler: View {
     @State private var dragStartIndex: CGFloat = 0
     @State private var rowHeight: CGFloat = 28
     @State private var measuredStrip: CGFloat = 140
+    @State private var col1: CGFloat = 40
+    @State private var col2: CGFloat = 60
 
 
     private func places(for texts: [String]) -> Int {
@@ -120,7 +122,9 @@ private struct EndMillStyleRuler: View {
                     Color.clear.frame(width: 18)
                     HStack(spacing: 16) {
                         Text(title2 ?? "").lineLimit(1).minimumScaleFactor(0.7)
+                            .frame(width: col1, alignment: .center)
                         Text(title3 ?? "").lineLimit(1).minimumScaleFactor(0.7)
+                            .frame(width: col2, alignment: .center)
                     }
                     .padding(.horizontal, 8)
                     .frame(width: stripWidth)
@@ -167,10 +171,18 @@ private struct EndMillStyleRuler: View {
         .background(
             HStack(spacing: 16) {
                 Text(items.map { ribbonDisplay($0.element1, places: element1Places) }.max(by: { $0.count < $1.count }) ?? "")
+                    .font(.body.monospacedDigit()).fixedSize()
+                    .background(GeometryReader { g in Color.clear.onAppear { col1 = max(g.size.width, col1) } })
                 Text(items.map { ribbonDisplay($0.element2 ?? "", places: element2Places) }.max(by: { $0.count < $1.count }) ?? "")
+                    .font(.body.monospacedDigit()).fixedSize()
+                    .background(GeometryReader { g in Color.clear.onAppear { col2 = max(g.size.width, col2) } })
             }
-            .font(.body.monospacedDigit()).fixedSize().hidden()
+            .hidden()
             .background(GeometryReader { g in Color.clear.onAppear { measuredStrip = g.size.width } })
+            Text(title2 ?? "").font(Font.system(size: 20)).fixedSize().hidden()
+                .background(GeometryReader { g in Color.clear.onAppear { col1 = max(g.size.width, col1) } })
+            Text(title3 ?? "").font(Font.system(size: 20)).fixedSize().hidden()
+                .background(GeometryReader { g in Color.clear.onAppear { col2 = max(g.size.width, col2) } })
         )
         .onAppear { displayValue = selected.value }
         .onChange(of: selected.id) { _, _ in
@@ -304,11 +316,11 @@ private struct ValueRibbon: View {
                 ForEach(items) { item in
                     HStack(spacing: 16) {
                         Text(ribbonDisplay(item.element1, places: element1Places))
-                            .fixedSize()
+                            .frame(width: col1, alignment: .center)
                         if let e2 = item.element2 {
                             Text(ribbonDisplay(e2, places: element2Places))
                                 .lineLimit(1)
-                                .fixedSize()
+                                .frame(width: col2, alignment: .center)
                         }
                     }
                     .font(.body.monospacedDigit())
