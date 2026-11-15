@@ -393,7 +393,7 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
                             .frame(height: usedBottom)
                     }
                 }
-                .frame(maxHeight: .infinity, alignment: .top)
+                .frame(maxHeight: .infinity, alignment: .center)
             }
             .background(Color.white)
             .background(
