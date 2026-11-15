@@ -59,12 +59,22 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
     private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
         let listW = columnWidth(0)
-        return HStack(alignment: .top, spacing: 0) {
-            column(0, width: listW, textScale: textScale)
-            ScrollView(.horizontal, showsIndicators: true) {
+        return VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
+                header(0, width: listW)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 0) {
+                        ForEach(1..<columnCount, id: \.self) { header($0, width: columnWidth($0)) }
+                    }
+                }
+            }
+            ScrollView(.vertical, showsIndicators: true) {
                 HStack(alignment: .top, spacing: 0) {
-                    ForEach(1..<columnCount, id: \.self) { i in
-                        column(i, width: columnWidth(i), textScale: textScale)
+                    dataColumn(0, width: listW)
+                    ScrollView(.horizontal, showsIndicators: true) {
+                        HStack(alignment: .top, spacing: 0) {
+                            ForEach(1..<columnCount, id: \.self) { dataColumn($0, width: columnWidth($0)) }
+                        }
                     }
                 }
             }
@@ -72,7 +82,7 @@ public struct SheetView<Top: View, Bottom: View>: View {
         .frame(maxWidth: width)
     }
 
-    private func column(_ index: Int, width: CGFloat, textScale: CGFloat) -> some View {
+    private func header(_ index: Int, width: CGFloat) -> some View {
         VStack(spacing: 0) {
             if titles.indices.contains(index), !titles[index].isEmpty {
                 cell(titles[index], width: width, weight: .semibold, fill: stripe)
@@ -80,13 +90,14 @@ public struct SheetView<Top: View, Bottom: View>: View {
             if showSubtitles {
                 cell(subtitles.indices.contains(index) ? subtitles[index] : "", width: width, weight: .regular, fill: stripe)
             }
-            ScrollView(.vertical, showsIndicators: index == 0) {
-                VStack(spacing: 0) {
-                    ForEach(rows) { row in
-                        let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
-                        cell(text, width: width, weight: .regular, fill: .white)
-                    }
-                }
+        }
+    }
+
+    private func dataColumn(_ index: Int, width: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            ForEach(rows) { row in
+                let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
+                cell(text, width: width, weight: .regular, fill: .white)
             }
         }
     }
