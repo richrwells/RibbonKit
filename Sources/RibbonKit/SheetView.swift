@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 public struct SheetRow: Identifiable, Equatable {
     public let id: String
@@ -128,13 +129,9 @@ public struct SheetView<Top: View, Bottom: View>: View {
     }
 }
 
-private struct SheetOffsetKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
 
-import UIKit
 
 private enum SheetScrollRole { case leader, follower }
 
