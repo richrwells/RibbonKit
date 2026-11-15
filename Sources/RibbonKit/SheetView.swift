@@ -48,24 +48,25 @@ public struct SheetView<Top: View, Bottom: View>: View {
     private var columnCount: Int { min(5, max(titles.count, rows.map { $0.values.count + 1 }.max() ?? 1)) }
     private var showSubtitles: Bool { subtitles.contains { !$0.isEmpty } }
 
-    private func columnWidth(_ index: Int, maxWidth: CGFloat) -> CGFloat {
+    private func columnWidth(_ index: Int, screen: CGFloat) -> CGFloat {
         let header = titles.indices.contains(index) ? titles[index] : ""
         let sub = subtitles.indices.contains(index) ? subtitles[index] : ""
         let cells = index == 0
             ? rows.map { $0.list }
             : rows.map { $0.values.indices.contains(index - 1) ? $0.values[index - 1] : "" }
-        let longest = ([header, sub] + cells).map { $0.count }.max() ?? 1
-        let natural = max(72, CGFloat(longest) * 8 + 16)
-        return index == 0 ? min(natural, maxWidth) : natural
+        let longest = ([header, sub] + cells).map { CGFloat($0.count) }.max() ?? 1
+        let natural = max(72, longest * 9 + 20)
+        let cap = index == 0 ? screen * 0.40 : screen * 0.60
+        return min(natural, cap)
     }
 
     private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
-        let listW = columnWidth(0, maxWidth: width * 0.40)
+        let listW = columnWidth(0, screen: width)
         return VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 0) {
                 header(0, width: listW).frame(width: listW)
                 HStack(alignment: .top, spacing: 0) {
-                    ForEach(1..<columnCount, id: \.self) { header($0, width: columnWidth($0, maxWidth: width)) }
+                    ForEach(1..<columnCount, id: \.self) { header($0, width: columnWidth($0, screen: width)) }
                 }
                 .offset(x: hOffset)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -76,7 +77,7 @@ public struct SheetView<Top: View, Bottom: View>: View {
                     dataColumn(0, width: listW).frame(width: listW)
                     ScrollView(.horizontal, showsIndicators: true) {
                         HStack(alignment: .top, spacing: 0) {
-                            ForEach(1..<columnCount, id: \.self) { dataColumn($0, width: columnWidth($0, maxWidth: width)) }
+                            ForEach(1..<columnCount, id: \.self) { dataColumn($0, width: columnWidth($0, screen: width)) }
                         }
                         .background(GeometryReader { g in
                             Color.clear.preference(key: SheetOffsetKey.self, value: g.frame(in: .named("sheetH")).minX)
