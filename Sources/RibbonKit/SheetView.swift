@@ -75,9 +75,10 @@ public struct SheetView<Top: View, Bottom: View>: View {
                             header(i, width: w[i]).frame(width: w[i])
                         }
                     }
+                    .offset(x: -hOffset)
                 }
                 .scrollDisabled(true)
-                .offset(x: -hOffset)
+                .allowsHitTesting(false)
             }
             ScrollView(.vertical, showsIndicators: true) {
                 HStack(alignment: .top, spacing: 0) {
@@ -89,14 +90,10 @@ public struct SheetView<Top: View, Bottom: View>: View {
                             }
                         }
                     }
-                    .background(GeometryReader { g in
-                        Color.clear.preference(key: SheetOffsetKey.self, value: -g.frame(in: .named("sheetScroll")).minX)
-                    })
-                    .coordinateSpace(name: "sheetScroll")
+                    .background(SheetScrollOffset(offset: $hOffset))
                 }
             }
         }
-        .onPreferenceChange(SheetOffsetKey.self) { hOffset = $0 }
         .frame(maxWidth: width)
     }
 
@@ -136,4 +133,45 @@ public struct SheetView<Top: View, Bottom: View>: View {
 private struct SheetOffsetKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
+import UIKit
+
+private struct SheetScrollOffset: UIViewRepresentable {
+    @Binding var offset: CGFloat
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            guard let scroll = uiView.enclosingScrollView, context.coordinator.scroll !== scroll else { return }
+            context.coordinator.scroll = scroll
+            context.coordinator.watch(scroll) { [weak uiView] x in
+                DispatchQueue.main.async { self.offset = x }
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    final class Coordinator {
+        weak var scroll: UIScrollView?
+        var token: NSKeyValueObservation?
+        func watch(_ scroll: UIScrollView, _ onChange: @escaping (CGFloat) -> Void) {
+            token = scroll.observe(\.contentOffset, options: [.new]) { view, _ in
+                onChange(view.contentOffset.x)
+            }
+        }
+    }
+}
+
+private extension UIView {
+    var enclosingScrollView: UIScrollView? {
+        sequence(first: superview, next: { $0?.superview }).compactMap { $0 as? UIScrollView }.first
+    }
 }
