@@ -69,7 +69,7 @@ public struct ReferenceNavigatorView<Content: View, Above: View, Below: View, To
             HStack(spacing: 18) {
                 Spacer(minLength: 0)
                 Text(title1).frame(width: listWidth, alignment: .center)
-                Text(title2).frame(minWidth: 80, alignment: .center)
+                Text(title2).frame(maxWidth: .infinity, alignment: .center)
                 Spacer(minLength: 0)
             }
             .font(Font.system(size: 20 * textScale, weight: .semibold))
