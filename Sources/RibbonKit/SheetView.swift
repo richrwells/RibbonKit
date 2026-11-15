@@ -63,7 +63,7 @@ public struct SheetView<Top: View, Bottom: View>: View {
         let listW = columnWidth(0, maxWidth: width * 0.40)
         return VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 0) {
-                header(0, width: listW)
+                header(0, width: listW).frame(width: listW)
                 HStack(alignment: .top, spacing: 0) {
                     ForEach(1..<columnCount, id: \.self) { header($0, width: columnWidth($0, maxWidth: width)) }
                 }
@@ -73,7 +73,7 @@ public struct SheetView<Top: View, Bottom: View>: View {
             }
             ScrollView(.vertical, showsIndicators: true) {
                 HStack(alignment: .top, spacing: 0) {
-                    dataColumn(0, width: listW)
+                    dataColumn(0, width: listW).frame(width: listW)
                     ScrollView(.horizontal, showsIndicators: true) {
                         HStack(alignment: .top, spacing: 0) {
                             ForEach(1..<columnCount, id: \.self) { dataColumn($0, width: columnWidth($0, maxWidth: width)) }
