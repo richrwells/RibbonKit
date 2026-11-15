@@ -311,6 +311,7 @@ private struct ValueRibbon: View {
                     HStack(spacing: 0) {
                         Text(ribbonDisplay(item.element1, places: element1Places))
                             .frame(width: col1, alignment: .center)
+                            .background(Color(red: 244/255, green: 245/255, blue: 246/255))
                         Color.clear.frame(width: 16)
                         if let e2 = item.element2 {
                             Text(ribbonDisplay(e2, places: element2Places))
