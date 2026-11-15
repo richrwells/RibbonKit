@@ -83,7 +83,19 @@ private struct EndMillStyleRuler: View {
     @State private var rowHeight: CGFloat = 28
     @State private var measuredStrip: CGFloat = 140
 
-    private var stripWidth: CGFloat { min(max(measuredStrip + 24, 120), 320) }
+
+    private var decimalPlaces: Int {
+        let smallest = items.map { abs($0.value) }.filter { $0 > 0 }.min() ?? 1
+        let delta = smallest * 0.001
+        return min(6, max(0, Int(ceil(-log10(delta)))))
+    }
+
+    private func display(_ text: String) -> String {
+        guard let n = Double(text) else { return text }
+        return String(format: "%.*f", decimalPlaces, n)
+    }
+
+    private var stripWidth: CGFloat { min(max(measuredStrip + 32, 120), 400) }
 
     private var selectedIndex: Int {
         items.firstIndex(where: { $0.id == selected.id }) ?? 0
@@ -143,9 +155,12 @@ private struct EndMillStyleRuler: View {
             )
         )
         .background(
-            Text(items.map { $0.element1 + ($0.element2 ?? "") }.max(by: { $0.count < $1.count }) ?? "")
-                .font(.body).fixedSize().hidden()
-                .background(GeometryReader { g in Color.clear.onAppear { measuredStrip = g.size.width } })
+            HStack(spacing: 0) {
+                Text(items.map { display($0.element1) }.max(by: { $0.count < $1.count }) ?? "")
+                Text(items.map { display($0.element2 ?? "") }.max(by: { $0.count < $1.count }) ?? "")
+            }
+            .font(.body.monospacedDigit()).fixedSize().hidden()
+            .background(GeometryReader { g in Color.clear.onAppear { measuredStrip = g.size.width } })
         )
         .onAppear { displayValue = selected.value }
         .onChange(of: selected.id) { _, _ in
@@ -276,9 +291,9 @@ private struct ValueRibbon: View {
             VStack(spacing: 0) {
                 ForEach(items) { item in
                     HStack(spacing: 0) {
-                        Text(item.element1).frame(maxWidth: .infinity, alignment: .center)
+                        Text(display(item.element1)).frame(maxWidth: .infinity, alignment: .center)
                         if let e2 = item.element2 {
-                            Text(e2).frame(maxWidth: .infinity, alignment: .center)
+                            Text(display(e2)).lineLimit(1).fixedSize().frame(maxWidth: .infinity, alignment: .center)
                         }
                     }
                     .font(.body.monospacedDigit())
