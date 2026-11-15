@@ -39,7 +39,8 @@ public struct SheetView<Top: View, Bottom: View>: View {
     public var body: some View {
         RibbonShell(title0: title0, top: topContent, bottom: bottomContent) { band, textScale, size in
             sheet(width: size.width, textScale: textScale)
-                .frame(maxHeight: band, alignment: .center)
+                .frame(height: band)
+                .clipped()
         }
     }
 
@@ -79,9 +80,13 @@ public struct SheetView<Top: View, Bottom: View>: View {
             if showSubtitles {
                 cell(subtitles.indices.contains(index) ? subtitles[index] : "", width: width, weight: .regular, fill: stripe)
             }
-            ForEach(rows) { row in
-                let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
-                cell(text, width: width, weight: .regular, fill: .white)
+            ScrollView(.vertical, showsIndicators: index == 0) {
+                VStack(spacing: 0) {
+                    ForEach(rows) { row in
+                        let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
+                        cell(text, width: width, weight: .regular, fill: .white)
+                    }
+                }
             }
         }
     }
