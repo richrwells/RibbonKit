@@ -180,6 +180,12 @@ private struct EndMillStyleRuler: View {
         .onChange(of: selected.id) { _, _ in
             if dragStartValue == nil { displayValue = selected.value }
         }
+        .onChange(of: selected.value) { _, _ in
+            if dragStartValue == nil { displayValue = selected.value }
+        }
+        .onChange(of: metric) { _, _ in
+            displayValue = selected.value
+        }
     }
 
         private var tapeDrag: some Gesture {
