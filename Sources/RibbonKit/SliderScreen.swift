@@ -383,14 +383,14 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
                 }
                 VStack(spacing: 4) {
                     if topHeight > 0 {
-                        ScrollView { top.frame(width: geo.size.width - 24).frame(maxWidth: .infinity) }
+                        ScrollView { top.frame(width: max(geo.size.width - 24, 1)).frame(maxWidth: .infinity) }
                             .frame(height: usedTop)
                     }
                     band(bandHeight, textScale, geo.size)
                         .frame(height: bandHeight)
                         .padding(.horizontal, 12)
                     if bottomHeight > 0 {
-                        ScrollView { bottom.frame(width: geo.size.width - 24).frame(maxWidth: .infinity) }
+                        ScrollView { bottom.frame(width: max(geo.size.width - 24, 1)).frame(maxWidth: .infinity) }
                             .frame(height: usedBottom)
                     }
                 }
@@ -398,11 +398,11 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
             }
             .background(Color.white)
             .background(
-                top.frame(width: geo.size.width - 24).fixedSize(horizontal: false, vertical: true).hidden()
+                top.frame(width: max(geo.size.width - 24, 1)).fixedSize(horizontal: false, vertical: true).hidden()
                     .background(GeometryReader { g in Color.clear.onAppear { topHeight = g.size.height }.onChange(of: g.size.height) { _, h in topHeight = h } })
             )
             .background(
-                bottom.frame(width: geo.size.width - 24).fixedSize(horizontal: false, vertical: true).hidden()
+                bottom.frame(width: max(geo.size.width - 24, 1)).fixedSize(horizontal: false, vertical: true).hidden()
                     .background(GeometryReader { g in Color.clear.onAppear { bottomHeight = g.size.height }.onChange(of: g.size.height) { _, h in bottomHeight = h } })
             )
         }
