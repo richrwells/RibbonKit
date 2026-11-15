@@ -116,12 +116,12 @@ private struct EndMillStyleRuler: View {
         VStack(spacing: 4) {
             if title1 != nil || title2 != nil || title3 != nil {
                 HStack(spacing: 0) {
-                    Text(title1 ?? "").multilineTextAlignment(.center).lineLimit(3).fixedSize(horizontal: false, vertical: true).frame(width: tapeWidth, alignment: .center)
+                    Text(title1 ?? "").multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.6).frame(width: tapeWidth, alignment: .center)
                     Color.clear.frame(width: 18)
                     HStack(spacing: 0) {
-                        Text(title2 ?? "").lineLimit(1).minimumScaleFactor(0.7)
+                        Text(title2 ?? "").multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.6)
                             .frame(width: 8 + col1 + 8, alignment: .center)
-                        Text(title3 ?? "").lineLimit(1).minimumScaleFactor(0.7)
+                        Text(title3 ?? "").multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.6)
                             .frame(width: 8 + col2 + 8, alignment: .center)
                     }
                     .frame(width: stripWidth)
