@@ -23,7 +23,6 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
     private let border = Color(red: 216/255, green: 218/255, blue: 221/255)
     private let stripe = Color(red: 244/255, green: 245/255, blue: 246/255)
-    @State private var hOffset: CGFloat = 0
 
     public init(rows: [SheetRow], title0: String = "", titles: [String] = [], subtitles: [String] = [],
                 accent: Color = Color(red: 0, green: 82/255, blue: 136/255),
@@ -66,38 +65,22 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
     private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
         let w = widths(for: width)
-        return VStack(spacing: 0) {
+        return ScrollView(.vertical, showsIndicators: true) {
             HStack(alignment: .top, spacing: 0) {
-                header(0, width: w[0]).frame(width: w[0])
-                ScrollView(.horizontal, showsIndicators: false) {
+                column(0, width: w[0])
+                ScrollView(.horizontal, showsIndicators: true) {
                     HStack(alignment: .top, spacing: 0) {
                         ForEach(1..<columnCount, id: \.self) { i in
-                            header(i, width: w[i]).frame(width: w[i])
+                            column(i, width: w[i])
                         }
                     }
-                    .offset(x: -hOffset)
-                }
-                .scrollDisabled(true)
-                .allowsHitTesting(false)
-            }
-            ScrollView(.vertical, showsIndicators: true) {
-                HStack(alignment: .top, spacing: 0) {
-                    dataColumn(0, width: w[0]).frame(width: w[0])
-                    ScrollView(.horizontal, showsIndicators: true) {
-                        HStack(alignment: .top, spacing: 0) {
-                            ForEach(1..<columnCount, id: \.self) { i in
-                                dataColumn(i, width: w[i]).frame(width: w[i])
-                            }
-                        }
-                    }
-                    .background(SheetScrollOffset(offset: $hOffset))
                 }
             }
         }
         .frame(maxWidth: width)
     }
 
-    private func header(_ index: Int, width: CGFloat) -> some View {
+    private func column(_ index: Int, width: CGFloat) -> some View {
         VStack(spacing: 0) {
             if titles.indices.contains(index), !titles[index].isEmpty {
                 cell(titles[index], width: width, weight: .semibold, fill: stripe)
@@ -105,16 +88,12 @@ public struct SheetView<Top: View, Bottom: View>: View {
             if showSubtitles {
                 cell(subtitles.indices.contains(index) ? subtitles[index] : "", width: width, weight: .regular, fill: stripe)
             }
-        }
-    }
-
-    private func dataColumn(_ index: Int, width: CGFloat) -> some View {
-        VStack(spacing: 0) {
             ForEach(rows) { row in
                 let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
                 cell(text, width: width, weight: .regular, fill: .white)
             }
         }
+        .frame(width: width)
     }
 
     private func cell(_ text: String, width: CGFloat, weight: Font.Weight, fill: Color) -> some View {
@@ -135,43 +114,3 @@ private struct SheetOffsetKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
-import UIKit
-
-private struct SheetScrollOffset: UIViewRepresentable {
-    @Binding var offset: CGFloat
-
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        view.isUserInteractionEnabled = false
-        view.backgroundColor = .clear
-        return view
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {
-        DispatchQueue.main.async {
-            guard let scroll = uiView.enclosingScrollView, context.coordinator.scroll !== scroll else { return }
-            context.coordinator.scroll = scroll
-            context.coordinator.watch(scroll) { [weak uiView] x in
-                DispatchQueue.main.async { self.offset = x }
-            }
-        }
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator() }
-
-    final class Coordinator {
-        weak var scroll: UIScrollView?
-        var token: NSKeyValueObservation?
-        func watch(_ scroll: UIScrollView, _ onChange: @escaping (CGFloat) -> Void) {
-            token = scroll.observe(\.contentOffset, options: [.new]) { view, _ in
-                onChange(view.contentOffset.x)
-            }
-        }
-    }
-}
-
-private extension UIView {
-    var enclosingScrollView: UIScrollView? {
-        sequence(first: superview, next: { $0?.superview }).compactMap { $0 as? UIScrollView }.first
-    }
-}
