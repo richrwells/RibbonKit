@@ -90,11 +90,16 @@ private struct EndMillStyleRuler: View {
     @State private var measuredStrip: CGFloat = 140
 
 
-    private var decimalPlaces: Int {
-        let smallest = items.map { abs($0.value) }.filter { $0 > 0 }.min() ?? 1
+    private func places(for texts: [String]) -> Int {
+        let nums = texts.compactMap { Double($0) }.map { abs($0) }.filter { $0 > 0 }
+        guard let smallest = nums.min() else { return 0 }
+        if nums.allSatisfy({ $0 == $0.rounded() }) { return 0 }
         let delta = smallest * 0.001
         return min(6, max(0, Int(ceil(-log10(delta)))))
     }
+
+    private var element1Places: Int { places(for: items.map { $0.element1 }) }
+    private var element2Places: Int { places(for: items.compactMap { $0.element2 }) }
 
     private var stripWidth: CGFloat { min(max(measuredStrip + 32, 120), 400) }
 
@@ -134,7 +139,7 @@ private struct EndMillStyleRuler: View {
                 .allowsHitTesting(false)
 
                 ZStack {
-                    ValueRibbon(items: items, decimalPlaces: decimalPlaces, selectedIndex: draggingStrip ? Int(displayIndex.rounded()) : selectedIndex, rowHeight: rowHeight, displayIndex: draggingStrip ? displayIndex : CGFloat(selectedIndex)) { item in
+                    ValueRibbon(items: items, element1Places: element1Places, element2Places: element2Places, selectedIndex: draggingStrip ? Int(displayIndex.rounded()) : selectedIndex, rowHeight: rowHeight, displayIndex: draggingStrip ? displayIndex : CGFloat(selectedIndex)) { item in
                         selected = item
                         displayValue = item.value
                     }
@@ -157,8 +162,8 @@ private struct EndMillStyleRuler: View {
         )
         .background(
             HStack(spacing: 0) {
-                Text(items.map { ribbonDisplay($0.element1, places: decimalPlaces) }.max(by: { $0.count < $1.count }) ?? "")
-                Text(items.map { ribbonDisplay($0.element2 ?? "", places: decimalPlaces) }.max(by: { $0.count < $1.count }) ?? "")
+                Text(items.map { ribbonDisplay($0.element1, places: element1Places) }.max(by: { $0.count < $1.count }) ?? "")
+                Text(items.map { ribbonDisplay($0.element2 ?? "", places: element2Places) }.max(by: { $0.count < $1.count }) ?? "")
             }
             .font(.body.monospacedDigit()).fixedSize().hidden()
             .background(GeometryReader { g in Color.clear.onAppear { measuredStrip = g.size.width } })
@@ -280,7 +285,8 @@ private struct TapeView: View {
 
 private struct ValueRibbon: View {
     let items: [RulerItem]
-    let decimalPlaces: Int
+    let element1Places: Int
+    let element2Places: Int
     let selectedIndex: Int
     let rowHeight: CGFloat
     var displayIndex: CGFloat = 0
@@ -293,9 +299,9 @@ private struct ValueRibbon: View {
             VStack(spacing: 0) {
                 ForEach(items) { item in
                     HStack(spacing: 0) {
-                        Text(ribbonDisplay(item.element1, places: decimalPlaces)).frame(maxWidth: .infinity, alignment: .center)
+                        Text(ribbonDisplay(item.element1, places: element1Places)).frame(maxWidth: .infinity, alignment: .center)
                         if let e2 = item.element2 {
-                            Text(ribbonDisplay(e2, places: decimalPlaces)).lineLimit(1).fixedSize().frame(maxWidth: .infinity, alignment: .center)
+                            Text(ribbonDisplay(e2, places: element2Places)).lineLimit(1).fixedSize().frame(maxWidth: .infinity, alignment: .center)
                         }
                     }
                     .font(.body.monospacedDigit())
