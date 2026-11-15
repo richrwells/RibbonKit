@@ -89,14 +89,14 @@ public struct SheetView<Top: View, Bottom: View>: View {
                             }
                         }
                     }
-                    .onScrollGeometryChange(for: CGFloat.self) { geo in
-                        geo.contentOffset.x
-                    } action: { _, x in
-                        hOffset = x
-                    }
+                    .background(GeometryReader { g in
+                        Color.clear.preference(key: SheetOffsetKey.self, value: -g.frame(in: .named("sheetScroll")).minX)
+                    })
+                    .coordinateSpace(name: "sheetScroll")
                 }
             }
         }
+        .onPreferenceChange(SheetOffsetKey.self) { hOffset = $0 }
         .frame(maxWidth: width)
     }
 
