@@ -67,16 +67,13 @@ public struct ReferenceNavigatorView<Content: View, Above: View, Below: View, To
 
         return VStack(spacing: 6) {
             HStack(spacing: 18) {
-                Spacer(minLength: 0)
                 Text(title1).frame(width: listWidth, alignment: .center)
                 Text(title2).frame(maxWidth: .infinity, alignment: .center)
-                Spacer(minLength: 0)
             }
             .font(Font.system(size: 20 * textScale, weight: .semibold))
             .foregroundStyle(Color.black)
 
             HStack(alignment: .center, spacing: 18) {
-                Spacer(minLength: 0)
                 ZStack {
                     listRibbon(width: listWidth, textScale: textScale)
                     RoundedRectangle(cornerRadius: 4)
@@ -101,7 +98,6 @@ public struct ReferenceNavigatorView<Content: View, Above: View, Below: View, To
                     below()
                 }
                 .frame(maxWidth: .infinity)
-                Spacer(minLength: 0)
             }
 
             Text("0").font(.body).hidden().background(
