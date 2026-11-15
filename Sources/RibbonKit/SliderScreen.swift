@@ -120,9 +120,9 @@ private struct EndMillStyleRuler: View {
                     Color.clear.frame(width: 18)
                     HStack(spacing: 16) {
                         Text(title2 ?? "").lineLimit(1).minimumScaleFactor(0.7)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         Text(title3 ?? "").lineLimit(1).minimumScaleFactor(0.7)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(.horizontal, 8)
                     .frame(width: stripWidth)
@@ -306,12 +306,12 @@ private struct ValueRibbon: View {
                 ForEach(items) { item in
                     HStack(spacing: 16) {
                         Text(ribbonDisplay(item.element1, places: element1Places))
-                            .frame(maxWidth: .infinity, alignment: .center)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         if let e2 = item.element2 {
                             Text(ribbonDisplay(e2, places: element2Places))
                                 .lineLimit(1)
-                                .minimumScaleFactor(1)
-                                .frame(maxWidth: .infinity, alignment: .center)
+                                .fixedSize(horizontal: true, vertical: false)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                     .font(.body.monospacedDigit())
