@@ -176,8 +176,6 @@ private struct EndMillStyleRuler: View {
             .hidden()
             .background(GeometryReader { g in Color.clear.onAppear { measuredStrip = g.size.width } })
         )
-
-        )
         .onAppear { displayValue = selected.value }
         .onChange(of: selected.id) { _, _ in
             if dragStartValue == nil { displayValue = selected.value }
