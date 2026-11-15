@@ -116,7 +116,7 @@ private struct EndMillStyleRuler: View {
         VStack(spacing: 4) {
             if title1 != nil || title2 != nil || title3 != nil {
                 HStack(spacing: 0) {
-                    Text(title1 ?? "").frame(width: tapeWidth, alignment: .center)
+                    Text(title1 ?? "").multilineTextAlignment(.center).lineLimit(3).fixedSize(horizontal: false, vertical: true).frame(width: tapeWidth, alignment: .center)
                     Color.clear.frame(width: 18)
                     HStack(spacing: 0) {
                         Text(title2 ?? "").lineLimit(1).minimumScaleFactor(0.7)
@@ -399,11 +399,11 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
             .background(Color.white)
             .background(
                 top.frame(width: geo.size.width - 24).fixedSize(horizontal: false, vertical: true).hidden()
-                    .background(GeometryReader { g in Color.clear.onAppear { topHeight = g.size.height } })
+                    .background(GeometryReader { g in Color.clear.onAppear { topHeight = g.size.height }.onChange(of: g.size.height) { _, h in topHeight = h } })
             )
             .background(
                 bottom.frame(width: geo.size.width - 24).fixedSize(horizontal: false, vertical: true).hidden()
-                    .background(GeometryReader { g in Color.clear.onAppear { bottomHeight = g.size.height } })
+                    .background(GeometryReader { g in Color.clear.onAppear { bottomHeight = g.size.height }.onChange(of: g.size.height) { _, h in bottomHeight = h } })
             )
         }
     }
