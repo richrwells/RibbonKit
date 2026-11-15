@@ -88,8 +88,8 @@ private struct EndMillStyleRuler: View {
     @State private var dragStartIndex: CGFloat = 0
     @State private var rowHeight: CGFloat = 28
     @State private var measuredStrip: CGFloat = 140
-    @State private var col1: CGFloat = 40
-    @State private var col2: CGFloat = 60
+    @State private var text1: CGFloat = 24
+    @State private var text2: CGFloat = 40
 
 
     private func places(for texts: [String]) -> Int {
@@ -103,12 +103,9 @@ private struct EndMillStyleRuler: View {
     private var element1Places: Int { places(for: items.map { $0.element1 }) }
     private var element2Places: Int { places(for: items.compactMap { $0.element2 }) }
 
-    private var contentFloor: CGFloat {
-        let e1 = items.map { ribbonDisplay($0.element1, places: element1Places).count }.max() ?? 1
-        let e2 = items.compactMap { $0.element2 }.map { ribbonDisplay($0, places: element2Places).count }.max() ?? 0
-        return CGFloat(e1 + e2) * 10 + 16
-    }
-    private var stripWidth: CGFloat { max(measuredStrip + 16, contentFloor + 16, 120) }
+    private var col1: CGFloat { text1 + 24 }
+    private var col2: CGFloat { text2 + 24 }
+    private var stripWidth: CGFloat { 8 + col1 + 16 + col2 + 8 }
 
     private var selectedIndex: Int {
         items.firstIndex(where: { $0.id == selected.id }) ?? 0
@@ -120,13 +117,12 @@ private struct EndMillStyleRuler: View {
                 HStack(spacing: 0) {
                     Text(title1 ?? "").frame(width: tapeWidth, alignment: .center)
                     Color.clear.frame(width: 18)
-                    HStack(spacing: 16) {
+                    HStack(spacing: 0) {
                         Text(title2 ?? "").lineLimit(1).minimumScaleFactor(0.7)
-                            .frame(width: col1, alignment: .center)
+                            .frame(width: 8 + col1 + 8, alignment: .center)
                         Text(title3 ?? "").lineLimit(1).minimumScaleFactor(0.7)
-                            .frame(width: col2, alignment: .center)
+                            .frame(width: 8 + col2 + 8, alignment: .center)
                     }
-                    .padding(.horizontal, 8)
                     .frame(width: stripWidth)
                 }
                 .font(Font.system(size: 20 * textScale, weight: .semibold))
@@ -172,21 +168,15 @@ private struct EndMillStyleRuler: View {
             HStack(spacing: 16) {
                 Text(items.map { ribbonDisplay($0.element1, places: element1Places) }.max(by: { $0.count < $1.count }) ?? "")
                     .font(.body.monospacedDigit()).fixedSize()
-                    .background(GeometryReader { g in Color.clear.onAppear { col1 = max(g.size.width, col1) } })
+                    .background(GeometryReader { g in Color.clear.onAppear { text1 = max(g.size.width, text1) } })
                 Text(items.map { ribbonDisplay($0.element2 ?? "", places: element2Places) }.max(by: { $0.count < $1.count }) ?? "")
                     .font(.body.monospacedDigit()).fixedSize()
-                    .background(GeometryReader { g in Color.clear.onAppear { col2 = max(g.size.width, col2) } })
+                    .background(GeometryReader { g in Color.clear.onAppear { text2 = max(g.size.width, text2) } })
             }
             .hidden()
             .background(GeometryReader { g in Color.clear.onAppear { measuredStrip = g.size.width } })
         )
-        .background(
-            Text(title2 ?? "").font(Font.system(size: 20)).fixedSize().hidden()
-                .background(GeometryReader { g in Color.clear.onAppear { col1 = max(g.size.width, col1) } })
-        )
-        .background(
-            Text(title3 ?? "").font(Font.system(size: 20)).fixedSize().hidden()
-                .background(GeometryReader { g in Color.clear.onAppear { col2 = max(g.size.width, col2) } })
+
         )
         .onAppear { displayValue = selected.value }
         .onChange(of: selected.id) { _, _ in
@@ -320,9 +310,10 @@ private struct ValueRibbon: View {
             let offset = mid - displayIndex * rowHeight - rowHeight / 2
             VStack(spacing: 0) {
                 ForEach(items) { item in
-                    HStack(spacing: 16) {
+                    HStack(spacing: 0) {
                         Text(ribbonDisplay(item.element1, places: element1Places))
                             .frame(width: col1, alignment: .center)
+                        Color.clear.frame(width: 16)
                         if let e2 = item.element2 {
                             Text(ribbonDisplay(e2, places: element2Places))
                                 .lineLimit(1)
