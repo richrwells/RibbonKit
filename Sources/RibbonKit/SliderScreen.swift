@@ -367,15 +367,9 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
             let wanted = topHeight + bottomHeight
             let bandHeight = min(maxBand, max(minBand, available - wanted))
             let contentRoom = max(available - bandHeight, 0)
-            let usedTop: CGFloat
-            let usedBottom: CGFloat
-            if wanted <= contentRoom || wanted == 0 {
-                usedTop = topHeight
-                usedBottom = bottomHeight
-            } else {
-                usedTop = contentRoom * (topHeight / wanted)
-                usedBottom = contentRoom * (bottomHeight / wanted)
-            }
+            let share = wanted > contentRoom && wanted > 0 ? contentRoom / wanted : 1
+            let usedTop = topHeight * share
+            let usedBottom = bottomHeight * share
             let textScale = (available - wanted) < minBand
                 ? max(0.75, (available - wanted) / minBand)
                 : 1.0
