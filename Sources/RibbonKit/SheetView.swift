@@ -1,0 +1,99 @@
+import SwiftUI
+
+public struct SheetRow: Identifiable, Equatable {
+    public let id: String
+    public let list: String
+    public let values: [String]
+
+    public init(id: String, list: String, values: [String]) {
+        self.id = id
+        self.list = list
+        self.values = Array(values.prefix(4))
+    }
+}
+
+public struct SheetView<Top: View, Bottom: View>: View {
+    let rows: [SheetRow]
+    var title0: String = ""
+    var titles: [String] = []
+    var subtitles: [String] = []
+    let topContent: Top
+    let bottomContent: Bottom
+    var accent: Color = Color(red: 0, green: 82/255, blue: 136/255)
+
+    private let border = Color(red: 216/255, green: 218/255, blue: 221/255)
+    private let stripe = Color(red: 244/255, green: 245/255, blue: 246/255)
+
+    public init(rows: [SheetRow], title0: String = "", titles: [String] = [], subtitles: [String] = [],
+                topContent: Top, bottomContent: Bottom, accent: Color = Color(red: 0, green: 82/255, blue: 136/255)) {
+        self.rows = rows
+        self.title0 = title0
+        self.titles = Array(titles.prefix(5))
+        self.subtitles = Array(subtitles.prefix(5))
+        self.topContent = topContent
+        self.bottomContent = bottomContent
+        self.accent = accent
+    }
+
+    public var body: some View {
+        RibbonShell(title0: title0, top: topContent, bottom: bottomContent) { band, textScale, size in
+            sheet(width: size.width, textScale: textScale)
+                .frame(maxHeight: band, alignment: .center)
+        }
+    }
+
+    private var columnCount: Int { min(5, max(titles.count, rows.map { $0.values.count + 1 }.max() ?? 1)) }
+    private var showSubtitles: Bool { subtitles.contains { !$0.isEmpty } }
+
+    private func columnWidth(_ index: Int) -> CGFloat {
+        let header = titles.indices.contains(index) ? titles[index] : ""
+        let sub = subtitles.indices.contains(index) ? subtitles[index] : ""
+        let cells = index == 0
+            ? rows.map { $0.list }
+            : rows.map { $0.values.indices.contains(index - 1) ? $0.values[index - 1] : "" }
+        let longest = ([header, sub] + cells).map { $0.count }.max() ?? 1
+        return max(72, CGFloat(longest) * 8 + 16)
+    }
+
+    private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
+        let listW = columnWidth(0)
+        return HStack(alignment: .top, spacing: 0) {
+            column(0, width: listW, textScale: textScale)
+            ScrollView(.horizontal, showsIndicators: true) {
+                HStack(alignment: .top, spacing: 0) {
+                    ForEach(1..<columnCount, id: \.self) { i in
+                        column(i, width: columnWidth(i), textScale: textScale)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: width)
+    }
+
+    private func column(_ index: Int, width: CGFloat, textScale: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            if titles.indices.contains(index), !titles[index].isEmpty {
+                cell(titles[index], width: width, weight: .semibold, fill: stripe)
+            }
+            if showSubtitles {
+                cell(subtitles.indices.contains(index) ? subtitles[index] : "", width: width, weight: .regular, fill: stripe)
+            }
+            ForEach(rows) { row in
+                let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
+                cell(text, width: width, weight: .regular, fill: .white)
+            }
+        }
+    }
+
+    private func cell(_ text: String, width: CGFloat, weight: Font.Weight, fill: Color) -> some View {
+        Text(text)
+            .font(.system(size: 15, weight: weight))
+            .foregroundStyle(Color.black)
+            .lineLimit(2)
+            .minimumScaleFactor(0.7)
+            .multilineTextAlignment(.center)
+            .frame(width: width, height: 36)
+            .background(fill)
+            .overlay(Rectangle().stroke(border, lineWidth: 0.5))
+    }
+}
