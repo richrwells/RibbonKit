@@ -377,6 +377,7 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
             VStack(spacing: 0) {
                 if !title0.isEmpty {
                     Text(title0).font(.headline).foregroundStyle(Color.black)
+                        .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                 }
                 VStack(spacing: 4) {
