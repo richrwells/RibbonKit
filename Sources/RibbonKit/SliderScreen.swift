@@ -361,9 +361,10 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
 
     public var body: some View {
         GeometryReader { geo in
+            let titleH: CGFloat = title0.isEmpty ? 0 : 28
             let maxBand = geo.size.height * 0.70
             let minBand = geo.size.height * 0.40
-            let available = geo.size.height
+            let available = geo.size.height - titleH
             let wanted = topHeight + bottomHeight
             let bandHeight = min(maxBand, max(minBand, available - wanted))
             let contentRoom = max(available - bandHeight, 0)
@@ -391,7 +392,7 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
                             .frame(height: usedBottom)
                     }
                 }
-                .frame(maxHeight: .infinity, alignment: .center)
+                .frame(maxHeight: .infinity, alignment: .top)
             }
             .background(Color.white)
             .background(
