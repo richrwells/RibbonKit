@@ -1,6 +1,7 @@
 import SwiftUI
 
 func ribbonDisplay(_ text: String, places: Int) -> String {
+    if text.count > 1, text.allSatisfy({ $0 == "0" }) { return text }
     guard let n = Double(text) else { return text }
     return String(format: "%.*f", places, n)
 }
