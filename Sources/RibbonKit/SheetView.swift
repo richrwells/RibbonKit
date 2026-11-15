@@ -65,13 +65,26 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
     private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
         let w = widths(for: width)
-        return ScrollView(.vertical, showsIndicators: true) {
+        return VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 0) {
-                column(0, width: w[0])
-                ScrollView(.horizontal, showsIndicators: true) {
+                header(0, width: w[0]).frame(width: w[0])
+                SheetLinkedScroll(axis: .horizontal, role: .follower) {
                     HStack(alignment: .top, spacing: 0) {
                         ForEach(1..<columnCount, id: \.self) { i in
-                            column(i, width: w[i])
+                            header(i, width: w[i]).frame(width: w[i])
+                        }
+                    }
+                }
+                .frame(height: headerHeight)
+            }
+            ScrollView(.vertical, showsIndicators: true) {
+                HStack(alignment: .top, spacing: 0) {
+                    dataColumn(0, width: w[0]).frame(width: w[0])
+                    SheetLinkedScroll(axis: .horizontal, role: .leader) {
+                        HStack(alignment: .top, spacing: 0) {
+                            ForEach(1..<columnCount, id: \.self) { i in
+                                dataColumn(i, width: w[i]).frame(width: w[i])
+                            }
                         }
                     }
                 }
@@ -80,7 +93,9 @@ public struct SheetView<Top: View, Bottom: View>: View {
         .frame(maxWidth: width)
     }
 
-    private func column(_ index: Int, width: CGFloat) -> some View {
+    private var headerHeight: CGFloat { (showSubtitles ? 72 : 36) }
+
+    private func header(_ index: Int, width: CGFloat) -> some View {
         VStack(spacing: 0) {
             if titles.indices.contains(index), !titles[index].isEmpty {
                 cell(titles[index], width: width, weight: .semibold, fill: stripe)
@@ -88,12 +103,16 @@ public struct SheetView<Top: View, Bottom: View>: View {
             if showSubtitles {
                 cell(subtitles.indices.contains(index) ? subtitles[index] : "", width: width, weight: .regular, fill: stripe)
             }
+        }
+    }
+
+    private func dataColumn(_ index: Int, width: CGFloat) -> some View {
+        VStack(spacing: 0) {
             ForEach(rows) { row in
                 let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
                 cell(text, width: width, weight: .regular, fill: .white)
             }
         }
-        .frame(width: width)
     }
 
     private func cell(_ text: String, width: CGFloat, weight: Font.Weight, fill: Color) -> some View {
