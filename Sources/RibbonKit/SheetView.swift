@@ -25,13 +25,14 @@ public struct SheetView<Top: View, Bottom: View>: View {
     private let stripe = Color(red: 244/255, green: 245/255, blue: 246/255)
 
     public init(rows: [SheetRow], title0: String = "", titles: [String] = [], subtitles: [String] = [],
-                topContent: Top, bottomContent: Bottom, accent: Color = Color(red: 0, green: 82/255, blue: 136/255)) {
+                accent: Color = Color(red: 0, green: 82/255, blue: 136/255),
+                @ViewBuilder topContent: () -> Top, @ViewBuilder bottomContent: () -> Bottom) {
         self.rows = rows
         self.title0 = title0
         self.titles = Array(titles.prefix(5))
         self.subtitles = Array(subtitles.prefix(5))
-        self.topContent = topContent
-        self.bottomContent = bottomContent
+        self.topContent = topContent()
+        self.bottomContent = bottomContent()
         self.accent = accent
     }
 
