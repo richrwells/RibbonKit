@@ -101,7 +101,7 @@ private struct EndMillStyleRuler: View {
     private var element1Places: Int { places(for: items.map { $0.element1 }) }
     private var element2Places: Int { places(for: items.compactMap { $0.element2 }) }
 
-    private var stripWidth: CGFloat { min(max(measuredStrip + 32, 120), 400) }
+    private var stripWidth: CGFloat { min(max(measuredStrip + 16, 120), 400) }
 
     private var selectedIndex: Int {
         items.firstIndex(where: { $0.id == selected.id }) ?? 0
@@ -113,12 +113,13 @@ private struct EndMillStyleRuler: View {
                 HStack(spacing: 0) {
                     Text(title1 ?? "").frame(width: tapeWidth, alignment: .center)
                     Color.clear.frame(width: 18)
-                    HStack(spacing: 0) {
+                    HStack(spacing: 16) {
                         Text(title2 ?? "").lineLimit(1).minimumScaleFactor(0.7)
                             .frame(maxWidth: .infinity, alignment: .center)
                         Text(title3 ?? "").lineLimit(1).minimumScaleFactor(0.7)
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
+                    .padding(.horizontal, 8)
                     .frame(width: stripWidth)
                 }
                 .font(Font.system(size: 20 * textScale, weight: .semibold))
@@ -161,7 +162,7 @@ private struct EndMillStyleRuler: View {
             )
         )
         .background(
-            HStack(spacing: 0) {
+            HStack(spacing: 16) {
                 Text(items.map { ribbonDisplay($0.element1, places: element1Places) }.max(by: { $0.count < $1.count }) ?? "")
                 Text(items.map { ribbonDisplay($0.element2 ?? "", places: element2Places) }.max(by: { $0.count < $1.count }) ?? "")
             }
@@ -298,10 +299,13 @@ private struct ValueRibbon: View {
             let offset = mid - displayIndex * rowHeight - rowHeight / 2
             VStack(spacing: 0) {
                 ForEach(items) { item in
-                    HStack(spacing: 0) {
-                        Text(ribbonDisplay(item.element1, places: element1Places)).frame(maxWidth: .infinity, alignment: .center)
+                    HStack(spacing: 16) {
+                        Text(ribbonDisplay(item.element1, places: element1Places))
+                            .frame(maxWidth: .infinity, alignment: .center)
                         if let e2 = item.element2 {
-                            Text(ribbonDisplay(e2, places: element2Places)).lineLimit(1).fixedSize().frame(maxWidth: .infinity, alignment: .center)
+                            Text(ribbonDisplay(e2, places: element2Places))
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .center)
                         }
                     }
                     .font(.body.monospacedDigit())
