@@ -47,24 +47,25 @@ public struct SheetView<Top: View, Bottom: View>: View {
     private var columnCount: Int { min(5, max(titles.count, rows.map { $0.values.count + 1 }.max() ?? 1)) }
     private var showSubtitles: Bool { subtitles.contains { !$0.isEmpty } }
 
-    private func columnWidth(_ index: Int) -> CGFloat {
+    private func columnWidth(_ index: Int, maxWidth: CGFloat) -> CGFloat {
         let header = titles.indices.contains(index) ? titles[index] : ""
         let sub = subtitles.indices.contains(index) ? subtitles[index] : ""
         let cells = index == 0
             ? rows.map { $0.list }
             : rows.map { $0.values.indices.contains(index - 1) ? $0.values[index - 1] : "" }
         let longest = ([header, sub] + cells).map { $0.count }.max() ?? 1
-        return max(72, CGFloat(longest) * 8 + 16)
+        let natural = max(72, CGFloat(longest) * 8 + 16)
+        return index == 0 ? min(natural, maxWidth) : natural
     }
 
     private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
-        let listW = columnWidth(0)
+        let listW = columnWidth(0, maxWidth: width * 0.40)
         return ScrollView(.vertical, showsIndicators: true) {
             HStack(alignment: .top, spacing: 0) {
                 column(0, width: listW)
                 ScrollView(.horizontal, showsIndicators: true) {
                     HStack(alignment: .top, spacing: 0) {
-                        ForEach(1..<columnCount, id: \.self) { column($0, width: columnWidth($0)) }
+                        ForEach(1..<columnCount, id: \.self) { column($0, width: columnWidth($0, maxWidth: width)) }
                     }
                 }
             }
@@ -91,8 +92,8 @@ public struct SheetView<Top: View, Bottom: View>: View {
         Text(text)
             .font(.system(size: 15, weight: weight))
             .foregroundStyle(Color.black)
-            .lineLimit(2)
-            .minimumScaleFactor(0.7)
+            .lineLimit(3)
+            .minimumScaleFactor(0.6)
             .multilineTextAlignment(.center)
             .frame(width: width, height: 36)
             .background(fill)
