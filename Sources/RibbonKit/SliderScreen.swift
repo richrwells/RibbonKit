@@ -350,7 +350,11 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
 
     public var body: some View {
         GeometryReader { geo in
-            let leftover = geo.size.height - topHeight - bottomHeight
+            let cap = geo.size.height * 0.15
+            let usedTop = min(topHeight, cap)
+            let usedBottom = min(bottomHeight, cap)
+            let below = geo.size.height - 36
+            let leftover = below - usedTop - usedBottom
             let bandHeight = min(geo.size.height * 0.70, max(geo.size.height * 0.40, leftover))
             let textScale = leftover < geo.size.height * 0.40
                 ? max(0.75, leftover / (geo.size.height * 0.40))
@@ -359,20 +363,32 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
                 if !title0.isEmpty {
                     Text(title0).font(.headline).foregroundStyle(Color.black)
                         .frame(maxWidth: .infinity).padding(.top, 8)
+                        .frame(height: 36)
                 }
-                ScrollView { top.frame(maxWidth: .infinity) }
-                    .frame(maxHeight: geo.size.height * 0.15)
-                    .background(GeometryReader { g in Color.clear.onAppear { topHeight = g.size.height } })
-                Spacer(minLength: 4)
-                band(bandHeight, textScale, geo.size)
-                    .frame(maxHeight: bandHeight)
-                    .padding(.horizontal, 12)
-                Spacer(minLength: 4)
-                ScrollView { bottom.frame(maxWidth: .infinity) }
-                    .frame(maxHeight: geo.size.height * 0.15)
-                    .background(GeometryReader { g in Color.clear.onAppear { bottomHeight = g.size.height } })
+                VStack(spacing: 4) {
+                    if topHeight > 0 {
+                        ScrollView { top.frame(maxWidth: .infinity) }
+                            .frame(height: usedTop)
+                    }
+                    band(bandHeight, textScale, geo.size)
+                        .frame(height: bandHeight)
+                        .padding(.horizontal, 12)
+                    if bottomHeight > 0 {
+                        ScrollView { bottom.frame(maxWidth: .infinity) }
+                            .frame(height: usedBottom)
+                    }
+                }
+                .frame(maxHeight: .infinity, alignment: .center)
             }
             .background(Color.white)
+            .background(
+                top.fixedSize().hidden()
+                    .background(GeometryReader { g in Color.clear.onAppear { topHeight = g.size.height } })
+            )
+            .background(
+                bottom.fixedSize().hidden()
+                    .background(GeometryReader { g in Color.clear.onAppear { bottomHeight = g.size.height } })
+            )
         }
     }
 }
