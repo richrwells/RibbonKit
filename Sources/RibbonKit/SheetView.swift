@@ -23,6 +23,7 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
     private let border = Color(red: 216/255, green: 218/255, blue: 221/255)
     private let stripe = Color(red: 244/255, green: 245/255, blue: 246/255)
+    @State private var hOffset: CGFloat = 0
 
     public init(rows: [SheetRow], title0: String = "", titles: [String] = [], subtitles: [String] = [],
                 accent: Color = Color(red: 0, green: 82/255, blue: 136/255),
@@ -60,20 +61,36 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
     private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
         let listW = columnWidth(0, maxWidth: width * 0.40)
-        return ScrollView(.vertical, showsIndicators: true) {
+        return VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 0) {
-                column(0, width: listW)
-                ScrollView(.horizontal, showsIndicators: true) {
-                    HStack(alignment: .top, spacing: 0) {
-                        ForEach(1..<columnCount, id: \.self) { column($0, width: columnWidth($0, maxWidth: width)) }
+                header(0, width: listW)
+                HStack(alignment: .top, spacing: 0) {
+                    ForEach(1..<columnCount, id: \.self) { header($0, width: columnWidth($0, maxWidth: width)) }
+                }
+                .offset(x: hOffset)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .clipped()
+            }
+            ScrollView(.vertical, showsIndicators: true) {
+                HStack(alignment: .top, spacing: 0) {
+                    dataColumn(0, width: listW)
+                    ScrollView(.horizontal, showsIndicators: true) {
+                        HStack(alignment: .top, spacing: 0) {
+                            ForEach(1..<columnCount, id: \.self) { dataColumn($0, width: columnWidth($0, maxWidth: width)) }
+                        }
+                        .background(GeometryReader { g in
+                            Color.clear.preference(key: SheetOffsetKey.self, value: g.frame(in: .named("sheetH")).minX)
+                        })
                     }
+                    .coordinateSpace(name: "sheetH")
                 }
             }
         }
+        .onPreferenceChange(SheetOffsetKey.self) { hOffset = $0 }
         .frame(maxWidth: width)
     }
 
-    private func column(_ index: Int, width: CGFloat) -> some View {
+    private func header(_ index: Int, width: CGFloat) -> some View {
         VStack(spacing: 0) {
             if titles.indices.contains(index), !titles[index].isEmpty {
                 cell(titles[index], width: width, weight: .semibold, fill: stripe)
@@ -81,6 +98,11 @@ public struct SheetView<Top: View, Bottom: View>: View {
             if showSubtitles {
                 cell(subtitles.indices.contains(index) ? subtitles[index] : "", width: width, weight: .regular, fill: stripe)
             }
+        }
+    }
+
+    private func dataColumn(_ index: Int, width: CGFloat) -> some View {
+        VStack(spacing: 0) {
             ForEach(rows) { row in
                 let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
                 cell(text, width: width, weight: .regular, fill: .white)
@@ -99,4 +121,9 @@ public struct SheetView<Top: View, Bottom: View>: View {
             .background(fill)
             .overlay(Rectangle().stroke(border, lineWidth: 0.5))
     }
+}
+
+private struct SheetOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
