@@ -358,7 +358,7 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
             let cap = geo.size.height * 0.15
             let usedTop = min(topHeight, cap)
             let usedBottom = min(bottomHeight, cap)
-            let below = geo.size.height - 36
+            let below = geo.size.height
             let leftover = below - usedTop - usedBottom
             let bandHeight = min(geo.size.height * 0.70, max(geo.size.height * 0.40, leftover))
             let textScale = leftover < geo.size.height * 0.40
@@ -367,8 +367,7 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
             VStack(spacing: 0) {
                 if !title0.isEmpty {
                     Text(title0).font(.headline).foregroundStyle(Color.black)
-                        .frame(maxWidth: .infinity).padding(.top, 8)
-                        .frame(height: 36)
+                        .frame(maxWidth: .infinity)
                 }
                 VStack(spacing: 4) {
                     if topHeight > 0 {
