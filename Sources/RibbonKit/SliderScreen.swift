@@ -147,7 +147,7 @@ private struct EndMillStyleRuler: View {
                 .allowsHitTesting(false)
 
                 ZStack {
-                    ValueRibbon(items: items, element1Places: element1Places, element2Places: element2Places, selectedIndex: draggingStrip ? Int(displayIndex.rounded()) : selectedIndex, rowHeight: rowHeight, displayIndex: draggingStrip ? displayIndex : CGFloat(selectedIndex)) { item in
+                    ValueRibbon(items: items, element1Places: element1Places, element2Places: element2Places, col1: col1, col2: col2, selectedIndex: draggingStrip ? Int(displayIndex.rounded()) : selectedIndex, rowHeight: rowHeight, displayIndex: draggingStrip ? displayIndex : CGFloat(selectedIndex)) { item in
                         selected = item
                         displayValue = item.value
                     }
@@ -307,6 +307,8 @@ private struct ValueRibbon: View {
     let items: [RulerItem]
     let element1Places: Int
     let element2Places: Int
+    let col1: CGFloat
+    let col2: CGFloat
     let selectedIndex: Int
     let rowHeight: CGFloat
     var displayIndex: CGFloat = 0
