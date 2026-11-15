@@ -96,11 +96,11 @@ public struct ReferenceNavigatorView<Content: View, Above: View, Below: View, To
                     content(selected)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .frame(minHeight: 64)
+                        .frame(minHeight: 64, maxWidth: .infinity)
                         .overlay(RoundedRectangle(cornerRadius: 8).stroke(accent, lineWidth: 2))
                     below()
                 }
-                .fixedSize(horizontal: true, vertical: false)
+                .frame(maxWidth: .infinity)
                 Spacer(minLength: 0)
             }
 
