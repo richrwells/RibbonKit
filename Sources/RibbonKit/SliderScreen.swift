@@ -101,7 +101,7 @@ private struct EndMillStyleRuler: View {
     private var element1Places: Int { places(for: items.map { $0.element1 }) }
     private var element2Places: Int { places(for: items.compactMap { $0.element2 }) }
 
-    private var stripWidth: CGFloat { min(max(measuredStrip + 16, 120), 400) }
+    private var stripWidth: CGFloat { max(measuredStrip + 16, 120) }
 
     private var selectedIndex: Int {
         items.firstIndex(where: { $0.id == selected.id }) ?? 0
@@ -305,6 +305,7 @@ private struct ValueRibbon: View {
                         if let e2 = item.element2 {
                             Text(ribbonDisplay(e2, places: element2Places))
                                 .lineLimit(1)
+                                .minimumScaleFactor(1)
                                 .frame(maxWidth: .infinity, alignment: .center)
                         }
                     }
