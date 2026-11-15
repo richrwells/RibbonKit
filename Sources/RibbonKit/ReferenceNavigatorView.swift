@@ -53,7 +53,7 @@ public struct ReferenceNavigatorView<Content: View, Above: View, Below: View, To
     public var body: some View {
         RibbonShell(title0: title0, top: topContent, bottom: bottomContent) { band, textScale, size in
             navigator(maxListWidth: size.width * 0.40, textScale: textScale)
-                .frame(height: band)
+                .frame(height: band, alignment: .top)
                 .clipped()
         }
         .onAppear {
