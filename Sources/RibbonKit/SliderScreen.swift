@@ -311,7 +311,7 @@ private struct ValueRibbon: View {
                     HStack(spacing: 0) {
                         Text(ribbonDisplay(item.element1, places: element1Places))
                             .frame(width: col1, alignment: .center)
-                            .background(Color(red: 244/255, green: 245/255, blue: 246/255))
+                            .background(Color(red: 230/255, green: 238/255, blue: 243/255))
                         Color.clear.frame(width: 16)
                         if let e2 = item.element2 {
                             Text(ribbonDisplay(e2, places: element2Places))
@@ -331,7 +331,7 @@ private struct ValueRibbon: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .clipped()
         }
-        .background(Color(red: 244/255, green: 245/255, blue: 246/255))
+        .background(Color(red: 230/255, green: 238/255, blue: 243/255))
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color(red: 216/255, green: 218/255, blue: 221/255), lineWidth: 1))
     }
