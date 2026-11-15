@@ -245,8 +245,13 @@ private struct TapeView: View {
                     let w = size.width
                     let step = metric ? 1.0 : 1.0 / 16.0
                     let ppu = metric ? pointsPerInch / 10.0 : pointsPerInch
-                    let lo = (items.first?.value ?? 0) - (metric ? 5 : 0.5)
-                    let hi = (items.last?.value ?? 1) + (metric ? 5 : 0.5)
+                    let dataMin = items.map { $0.value }.min() ?? 0
+                    let dataMax = items.map { $0.value }.max() ?? 1
+                    let unit = metric ? 10.0 : 1.0
+                    let lowInt = (dataMin / unit).rounded(.down) * unit
+                    let highInt = (dataMax / unit).rounded(.up) * unit
+                    let lo = lowInt - (metric ? 2 : 0.25)
+                    let hi = highInt + (metric ? 2 : 0.25)
                     var mark = (lo / step).rounded(.down) * step
                     while mark <= hi + 0.0001 {
                         let y = mid + CGFloat(mark - displayValue) * ppu
