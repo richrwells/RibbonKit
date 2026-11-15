@@ -101,7 +101,12 @@ private struct EndMillStyleRuler: View {
     private var element1Places: Int { places(for: items.map { $0.element1 }) }
     private var element2Places: Int { places(for: items.compactMap { $0.element2 }) }
 
-    private var stripWidth: CGFloat { max(measuredStrip + 16, 120) }
+    private var contentFloor: CGFloat {
+        let e1 = items.map { ribbonDisplay($0.element1, places: element1Places).count }.max() ?? 1
+        let e2 = items.compactMap { $0.element2 }.map { ribbonDisplay($0, places: element2Places).count }.max() ?? 0
+        return CGFloat(e1 + e2) * 10 + 16
+    }
+    private var stripWidth: CGFloat { max(measuredStrip + 16, contentFloor + 16, 120) }
 
     private var selectedIndex: Int {
         items.firstIndex(where: { $0.id == selected.id }) ?? 0
