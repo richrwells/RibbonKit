@@ -129,7 +129,6 @@ public struct SheetView<Top: View, Bottom: View>: View {
     }
 }
 
-}
 
 
 
