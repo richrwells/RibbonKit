@@ -53,7 +53,7 @@ public struct ReferenceNavigatorView<Content: View, Above: View, Below: View, To
     public var body: some View {
         RibbonShell(title0: title0, top: topContent, bottom: bottomContent) { band, textScale, size in
             navigator(maxListWidth: size.width * 0.40, textScale: textScale)
-                .frame(maxHeight: band, alignment: .center)
+                .frame(height: band, alignment: .center)
                 .clipped()
         }
         .onAppear {
@@ -132,7 +132,7 @@ public struct ReferenceNavigatorView<Content: View, Above: View, Below: View, To
                 Color.clear.frame(height: mid)
             }
             .offset(y: offset - mid)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .clipped()
             .background(ribbonColor)
             .clipShape(RoundedRectangle(cornerRadius: 4))
