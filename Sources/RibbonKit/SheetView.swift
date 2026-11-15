@@ -60,34 +60,43 @@ public struct SheetView<Top: View, Bottom: View>: View {
         return min(natural, cap)
     }
 
+    private func widths(for screen: CGFloat) -> [CGFloat] {
+        (0..<columnCount).map { columnWidth($0, screen: screen) }
+    }
+
     private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
-        let listW = columnWidth(0, screen: width)
+        let w = widths(for: width)
         return VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 0) {
-                header(0, width: listW).frame(width: listW)
-                HStack(alignment: .top, spacing: 0) {
-                    ForEach(1..<columnCount, id: \.self) { header($0, width: columnWidth($0, screen: width)) }
+                header(0, width: w[0]).frame(width: w[0])
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 0) {
+                        ForEach(1..<columnCount, id: \.self) { i in
+                            header(i, width: w[i]).frame(width: w[i])
+                        }
+                    }
                 }
-                .offset(x: hOffset)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .clipped()
+                .scrollDisabled(true)
+                .offset(x: -hOffset)
             }
             ScrollView(.vertical, showsIndicators: true) {
                 HStack(alignment: .top, spacing: 0) {
-                    dataColumn(0, width: listW).frame(width: listW)
+                    dataColumn(0, width: w[0]).frame(width: w[0])
                     ScrollView(.horizontal, showsIndicators: true) {
                         HStack(alignment: .top, spacing: 0) {
-                            ForEach(1..<columnCount, id: \.self) { dataColumn($0, width: columnWidth($0, screen: width)) }
+                            ForEach(1..<columnCount, id: \.self) { i in
+                                dataColumn(i, width: w[i]).frame(width: w[i])
+                            }
                         }
-                        .background(GeometryReader { g in
-                            Color.clear.preference(key: SheetOffsetKey.self, value: g.frame(in: .named("sheetH")).minX)
-                        })
                     }
-                    .coordinateSpace(name: "sheetH")
+                    .onScrollGeometryChange(for: CGFloat.self) { geo in
+                        geo.contentOffset.x
+                    } action: { _, x in
+                        hOffset = x
+                    }
                 }
             }
         }
-        .onPreferenceChange(SheetOffsetKey.self) { hOffset = $0 }
         .frame(maxWidth: width)
     }
 
