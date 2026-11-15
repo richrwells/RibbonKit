@@ -179,8 +179,12 @@ private struct EndMillStyleRuler: View {
             }
             .hidden()
             .background(GeometryReader { g in Color.clear.onAppear { measuredStrip = g.size.width } })
+        )
+        .background(
             Text(title2 ?? "").font(Font.system(size: 20)).fixedSize().hidden()
                 .background(GeometryReader { g in Color.clear.onAppear { col1 = max(g.size.width, col1) } })
+        )
+        .background(
             Text(title3 ?? "").font(Font.system(size: 20)).fixedSize().hidden()
                 .background(GeometryReader { g in Color.clear.onAppear { col2 = max(g.size.width, col2) } })
         )
