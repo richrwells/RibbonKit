@@ -362,11 +362,12 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
 
     public var body: some View {
         GeometryReader { geo in
-            let titleH: CGFloat = title0.isEmpty ? 0 : 28
-            let maxBand = geo.size.height * 0.70
-            let minBand = geo.size.height * 0.40
+            let landscape = geo.size.width > geo.size.height
+            let titleH: CGFloat = (landscape || title0.isEmpty) ? 0 : 28
+            let maxBand = landscape ? geo.size.height : geo.size.height * 0.70
+            let minBand = landscape ? geo.size.height : geo.size.height * 0.40
             let available = geo.size.height - titleH
-            let wanted = topHeight + bottomHeight
+            let wanted = landscape ? 0 : topHeight + bottomHeight
             let bandHeight = min(maxBand, max(minBand, available - wanted))
             let contentRoom = max(available - bandHeight, 0)
             let share = wanted > contentRoom && wanted > 0 ? contentRoom / wanted : 1
@@ -376,20 +377,20 @@ public struct RibbonShell<Top: View, Bottom: View, Band: View>: View {
                 ? max(0.75, (available - wanted) / minBand)
                 : 1.0
             VStack(spacing: 0) {
-                if !title0.isEmpty {
+                if !landscape && !title0.isEmpty {
                     Text(title0).font(.headline).foregroundStyle(Color.black)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                 }
                 VStack(spacing: 4) {
-                    if topHeight > 0 {
+                    if !landscape && topHeight > 0 {
                         ScrollView { top.frame(width: max(geo.size.width - 24, 1)).frame(maxWidth: .infinity) }
                             .frame(height: usedTop)
                     }
                     band(bandHeight, textScale, geo.size)
                         .frame(height: bandHeight)
                         .padding(.horizontal, 12)
-                    if bottomHeight > 0 {
+                    if !landscape && bottomHeight > 0 {
                         ScrollView { bottom.frame(width: max(geo.size.width - 24, 1)).frame(maxWidth: .infinity) }
                             .frame(height: usedBottom)
                     }
