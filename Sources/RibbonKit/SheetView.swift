@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 public struct SheetRow: Identifiable, Equatable {
     public let id: String
@@ -66,52 +65,38 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
     private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
         let w = widths(for: width)
-        return VStack(spacing: 0) {
+        return ScrollView(.vertical, showsIndicators: true) {
             HStack(alignment: .top, spacing: 0) {
-                header(0, width: w[0]).frame(width: w[0])
-                SheetLinkedScroll(axis: .horizontal, role: .follower) {
+                column(0, width: w[0])
+                ScrollView(.horizontal, showsIndicators: true) {
                     HStack(alignment: .top, spacing: 0) {
                         ForEach(1..<columnCount, id: \.self) { i in
-                            header(i, width: w[i]).frame(width: w[i])
-                        }
-                    }
-                }
-                .frame(height: headerHeight)
-            }
-            ScrollView(.vertical, showsIndicators: true) {
-                HStack(alignment: .top, spacing: 0) {
-                    dataColumn(0, width: w[0]).frame(width: w[0])
-                    SheetLinkedScroll(axis: .horizontal, role: .leader) {
-                        HStack(alignment: .top, spacing: 0) {
-                            ForEach(1..<columnCount, id: \.self) { i in
-                                dataColumn(i, width: w[i]).frame(width: w[i])
-                            }
+                            column(i, width: w[i])
                         }
                     }
                 }
             }
         }
+        .id(columnCount)
         .frame(maxWidth: width)
     }
 
-    private var headerHeight: CGFloat { (showSubtitles ? 72 : 36) }
-
-    private func header(_ index: Int, width: CGFloat) -> some View {
+    private func column(_ index: Int, width: CGFloat) -> some View {
         VStack(spacing: 0) {
-            if titles.indices.contains(index), !titles[index].isEmpty {
-                cell(titles[index], width: width, weight: .semibold, fill: stripe)
-            }
-            if showSubtitles {
-                cell(subtitles.indices.contains(index) ? subtitles[index] : "", width: width, weight: .regular, fill: stripe)
-            }
-        }
-    }
-
-    private func dataColumn(_ index: Int, width: CGFloat) -> some View {
-        VStack(spacing: 0) {
+            header(index, width: width)
             ForEach(rows) { row in
                 let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
                 cell(text, width: width, weight: .regular, fill: .white)
+            }
+        }
+        .frame(width: width)
+    }
+
+    private func header(_ index: Int, width: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            cell(titles.indices.contains(index) ? titles[index] : "", width: width, weight: .semibold, fill: stripe)
+            if showSubtitles {
+                cell(subtitles.indices.contains(index) ? subtitles[index] : "", width: width, weight: .regular, fill: stripe)
             }
         }
     }
@@ -123,7 +108,7 @@ public struct SheetView<Top: View, Bottom: View>: View {
             .lineLimit(3)
             .minimumScaleFactor(0.6)
             .multilineTextAlignment(.center)
-            .frame(width: width, height: 36)
+            .frame(width: width, height: 52)
             .background(fill)
             .overlay(Rectangle().stroke(border, lineWidth: 0.5))
     }
@@ -132,67 +117,3 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
 
 
-private enum SheetScrollRole { case leader, follower }
-
-private struct SheetLinkedScroll<Content: View>: UIViewRepresentable {
-    var axis: Axis
-    var role: SheetScrollRole
-    var content: Content
-
-    init(axis: Axis, role: SheetScrollRole, @ViewBuilder content: () -> Content) {
-        self.axis = axis
-        self.role = role
-        self.content = content()
-    }
-
-    func makeUIView(context: Context) -> UIScrollView {
-        let scroll = UIScrollView()
-        scroll.showsHorizontalScrollIndicator = role == .leader
-        scroll.showsVerticalScrollIndicator = false
-        scroll.bounces = true
-        scroll.backgroundColor = .clear
-        let host = UIHostingController(rootView: content)
-        host.view.backgroundColor = .clear
-        host.view.translatesAutoresizingMaskIntoConstraints = false
-        scroll.addSubview(host.view)
-        NSLayoutConstraint.activate([
-            host.view.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
-            host.view.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
-            host.view.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
-            host.view.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor)
-        ])
-        context.coordinator.host = host
-        if role == .leader {
-            SheetScrollLink.shared.leader = scroll
-        } else {
-            SheetScrollLink.shared.follower = scroll
-            scroll.isScrollEnabled = false
-        }
-        SheetScrollLink.shared.bind()
-        return scroll
-    }
-
-    func updateUIView(_ scroll: UIScrollView, context: Context) {
-        context.coordinator.host?.rootView = content
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator() }
-
-    final class Coordinator {
-        var host: UIHostingController<Content>?
-    }
-}
-
-private final class SheetScrollLink {
-    static let shared = SheetScrollLink()
-    weak var leader: UIScrollView?
-    weak var follower: UIScrollView?
-    var token: NSKeyValueObservation?
-
-    func bind() {
-        guard let leader else { return }
-        token = leader.observe(\.contentOffset, options: [.new]) { [weak self] view, _ in
-            self?.follower?.contentOffset.x = view.contentOffset.x
-        }
-    }
-}
