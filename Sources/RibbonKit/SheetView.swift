@@ -23,6 +23,7 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
     private let border = Color(red: 216/255, green: 218/255, blue: 221/255)
     private let stripe = Color(red: 244/255, green: 245/255, blue: 246/255)
+    @State private var hOffset: CGFloat = 0
 
     public init(rows: [SheetRow], title0: String = "", titles: [String] = [], subtitles: [String] = [],
                 accent: Color = Color(red: 0, green: 82/255, blue: 136/255),
@@ -65,14 +66,28 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
     private func sheet(width: CGFloat, textScale: CGFloat) -> some View {
         let w = widths(for: width)
-        return ScrollView(.vertical, showsIndicators: true) {
+        return VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 0) {
-                column(0, width: w[0])
-                ScrollView(.horizontal, showsIndicators: true) {
-                    HStack(alignment: .top, spacing: 0) {
-                        ForEach(1..<columnCount, id: \.self) { i in
-                            column(i, width: w[i])
+                header(0, width: w[0]).frame(width: w[0])
+                HStack(alignment: .top, spacing: 0) {
+                    ForEach(1..<columnCount, id: \.self) { i in
+                        header(i, width: w[i]).frame(width: w[i])
+                    }
+                }
+                .offset(x: -hOffset)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .clipped()
+            }
+            ScrollView(.vertical, showsIndicators: true) {
+                HStack(alignment: .top, spacing: 0) {
+                    dataColumn(0, width: w[0]).frame(width: w[0])
+                    ScrollView(.horizontal, showsIndicators: true) {
+                        HStack(alignment: .top, spacing: 0) {
+                            ForEach(1..<columnCount, id: \.self) { i in
+                                dataColumn(i, width: w[i]).frame(width: w[i])
+                            }
                         }
+                        .background(SheetOffsetProbe { hOffset = $0 })
                     }
                 }
             }
@@ -81,15 +96,13 @@ public struct SheetView<Top: View, Bottom: View>: View {
         .frame(maxWidth: width)
     }
 
-    private func column(_ index: Int, width: CGFloat) -> some View {
+    private func dataColumn(_ index: Int, width: CGFloat) -> some View {
         VStack(spacing: 0) {
-            header(index, width: width)
             ForEach(rows) { row in
                 let text = index == 0 ? row.list : (row.values.indices.contains(index - 1) ? row.values[index - 1] : "")
                 cell(text, width: width, weight: .regular, fill: .white)
             }
         }
-        .frame(width: width)
     }
 
     private func header(_ index: Int, width: CGFloat) -> some View {
