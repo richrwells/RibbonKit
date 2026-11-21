@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 public struct SheetRow: Identifiable, Equatable {
     public let id: String
@@ -130,3 +131,34 @@ public struct SheetView<Top: View, Bottom: View>: View {
 
 
 
+
+
+private struct SheetOffsetProbe: UIViewRepresentable {
+    var onChange: (CGFloat) -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            guard let scroll = uiView.enclosingScrollView, context.coordinator.token == nil else { return }
+            context.coordinator.token = scroll.observe(\.contentOffset, options: [.new]) { view, _ in
+                DispatchQueue.main.async { self.onChange(view.contentOffset.x) }
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    final class Coordinator { var token: NSKeyValueObservation? }
+}
+
+private extension UIView {
+    var enclosingScrollView: UIScrollView? {
+        sequence(first: superview, next: { $0?.superview }).compactMap { $0 as? UIScrollView }.first
+    }
+}
