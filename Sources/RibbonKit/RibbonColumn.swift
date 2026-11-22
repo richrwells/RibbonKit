@@ -1,11 +1,13 @@
 import SwiftUI
+import UIKit
 
 /// A single vertical tape for setting one number by dragging.
 ///
 /// One tape, one value. It is not linked to any other ribbon. The view is only the tape and its
 /// pointer; the title and the value readout belong to the caller.
 ///
-/// Small values sit toward the top. Dragging down lowers the value, dragging up raises it.
+/// Low values sit at the bottom, increasing toward the top. The tape follows the finger:
+/// dragging down raises the value, dragging up lowers it.
 public struct RibbonColumn: View {
     public enum TickStyle: Sendable {
         /// Integer 100%, half 70%, quarter 50%, eighth 30%, sixteenth 15% of tape width.
@@ -20,6 +22,9 @@ public struct RibbonColumn: View {
     let valuePerInteger: Double
     let tickStyle: TickStyle
     let pointsPerInteger: CGFloat
+    let labelEvery: Int
+    let labelDiameter: CGFloat?
+    let labelFontSize: CGFloat?
     let accent: Color
 
     /// - Parameters:
@@ -29,6 +34,12 @@ public struct RibbonColumn: View {
     ///   - valuePerInteger: Real units per integer mark (1,000,000 for price in millions).
     ///   - tickStyle: `.inch` or `.integer`.
     ///   - pointsPerInteger: Drawn size of one integer interval, in points.
+    ///   - labelEvery: Circle and label only integers that are multiples of this (5 → 5, 10, 15).
+    ///     Every integer still gets its full-width tick.
+    ///   - labelDiameter: Circle diameter. Default one-third of the labeled interval. Pass the same
+    ///     value to several columns to make their circles match. Always capped at 60% of tape width.
+    ///   - labelFontSize: Label size. Default 80% of the circle, reduced so the widest label in range
+    ///     fits. One size per column. Pass the same value to several columns to make labels match.
     ///   - accent: Pointer color.
     public init(value: Binding<Double>,
                 range: ClosedRange<Double>,
@@ -36,6 +47,9 @@ public struct RibbonColumn: View {
                 valuePerInteger: Double = 1,
                 tickStyle: TickStyle = .inch,
                 pointsPerInteger: CGFloat = 108,
+                labelEvery: Int = 1,
+                labelDiameter: CGFloat? = nil,
+                labelFontSize: CGFloat? = nil,
                 accent: Color = Color(red: 0, green: 82/255, blue: 136/255)) {
         self._value = value
         self.range = range
@@ -43,7 +57,32 @@ public struct RibbonColumn: View {
         self.valuePerInteger = valuePerInteger > 0 ? valuePerInteger : 1
         self.tickStyle = tickStyle
         self.pointsPerInteger = max(pointsPerInteger, 1)
+        self.labelEvery = max(labelEvery, 1)
+        self.labelDiameter = labelDiameter
+        self.labelFontSize = labelFontSize
         self.accent = accent
+    }
+
+    /// The largest label font size, up to 80% of `diameter`, at which every label fits in the circle.
+    /// Use it to give several columns one shared label size.
+    public static func fittedLabelFontSize(diameter: CGFloat, labels: [String]) -> CGFloat {
+        var size = diameter * 0.8
+        let room = diameter * 0.86
+        for label in labels {
+            let font = UIFont.monospacedDigitSystemFont(ofSize: size, weight: .regular)
+            let width = (label as NSString).size(withAttributes: [.font: font]).width
+            if width > room { size *= room / width }
+        }
+        return size
+    }
+
+    /// Labels drawn in range, widest digit count only (enough to size the font).
+    private var widestLabels: [String] {
+        let first = Int(lo.rounded(.up)), last = Int(hi.rounded(.down))
+        guard last >= first else { return [] }
+        let labels = (first...last).filter { $0 % labelEvery == 0 }.map(String.init)
+        let longest = labels.map(\.count).max() ?? 0
+        return labels.filter { $0.count == longest }
     }
 
     /// Position under the pointer, in integer units (value ÷ valuePerInteger).
@@ -61,6 +100,10 @@ public struct RibbonColumn: View {
                              lo: lo, hi: hi,
                              tickStyle: tickStyle,
                              pointsPerInteger: pointsPerInteger,
+                             labelEvery: labelEvery,
+                             labelDiameter: labelDiameter,
+                             labelFontSize: labelFontSize,
+                             widestLabels: widestLabels,
                              accent: accent)
                 .contentShape(Rectangle())
                 .gesture(drag)
@@ -94,12 +137,14 @@ public struct RibbonColumn: View {
                     dragStart = position
                 }
                 let start = dragStart ?? position
-                position = clampPosition(start - Double(g.translation.height / pointsPerInteger))
+                // Low values at the bottom: the tape follows the finger, so dragging down
+                // brings higher marks onto the pointer.
+                position = clampPosition(start + Double(g.translation.height / pointsPerInteger))
                 publish()
             }
             .onEnded { g in
                 dragStart = nil
-                let speed = Double(-g.velocity.height / pointsPerInteger) // integers per second
+                let speed = Double(g.velocity.height / pointsPerInteger) // integers per second
                 if abs(g.velocity.height) > 300 {
                     fling(speed: speed)
                 } else {
@@ -111,7 +156,7 @@ public struct RibbonColumn: View {
     private func tap(at y: CGFloat, height: CGFloat) {
         motion?.cancel()
         motion = nil
-        let target = position + Double((y - height / 2) / pointsPerInteger)
+        let target = position - Double((y - height / 2) / pointsPerInteger)
         interacting = true
         let snapped = snapValue(target * valuePerInteger)
         value = snapped
@@ -187,6 +232,10 @@ private struct RibbonColumnTape: View, Animatable {
     let hi: Double
     let tickStyle: RibbonColumn.TickStyle
     let pointsPerInteger: CGFloat
+    let labelEvery: Int
+    let labelDiameter: CGFloat?
+    let labelFontSize: CGFloat?
+    let widestLabels: [String]
     let accent: Color
 
     var animatableData: Double {
@@ -226,13 +275,15 @@ private struct RibbonColumnTape: View, Animatable {
         let last = ((position + visibleHalf) / unit).rounded(.up)
         guard last >= first, last - first < 20_000 else { return }
 
-        let diameter = min(CGFloat(ppi) / 3, w * 0.6)
+        let diameter = min(labelDiameter ?? CGFloat(ppi) * CGFloat(labelEvery) / 3, w * 0.6)
+        let fontSize = labelFontSize
+            ?? RibbonColumn.fittedLabelFontSize(diameter: diameter, labels: widestLabels)
         let eps = unit / 1000
 
         var i = first
         while i <= last {
             let mark = i * unit
-            let y = mid + CGFloat((mark - position) * ppi)
+            let y = mid - CGFloat((mark - position) * ppi) // low values at the bottom
             let sixteenths = Int((i * Double(16 / divisions)).rounded()) // mark in 1/16ths
             let whole = sixteenths % 16 == 0
             let frac: CGFloat = {
@@ -248,19 +299,15 @@ private struct RibbonColumnTape: View, Animatable {
             context.fill(Path(CGRect(x: w - len, y: y - h / 2, width: len, height: h)),
                          with: .color(Color.black.opacity(inRange ? 0.85 : 0.22)))
 
-            if whole && inRange {
+            let integer = Int(mark.rounded())
+            if whole && inRange && integer % labelEvery == 0 {
                 let circle = CGRect(x: 6, y: y - diameter / 2, width: diameter, height: diameter)
                 context.fill(Path(ellipseIn: circle), with: .color(.white))
                 context.stroke(Path(ellipseIn: circle), with: .color(.black), lineWidth: 1.5)
-                let label = String(Int(mark.rounded()))
-                var resolved = context.resolve(Text(label).font(.system(size: diameter * 0.8)).foregroundStyle(Color.black))
-                // Multi-digit labels shrink to stay inside the circle.
-                let measured = resolved.measure(in: CGSize(width: 1000, height: 1000))
-                if measured.width > diameter * 0.86 {
-                    let fitted = diameter * 0.8 * (diameter * 0.86 / measured.width)
-                    resolved = context.resolve(Text(label).font(.system(size: fitted)).foregroundStyle(Color.black))
-                }
-                context.draw(resolved, at: CGPoint(x: circle.midX, y: y), anchor: .center)
+                let text = Text(String(integer))
+                    .font(.system(size: fontSize).monospacedDigit())
+                    .foregroundStyle(Color.black)
+                context.draw(text, at: CGPoint(x: circle.midX, y: y), anchor: .center)
             }
             i += 1
         }
