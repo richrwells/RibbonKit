@@ -14,6 +14,9 @@ public struct RibbonColumn: View {
         case inch
         /// One full-width tick per whole number, no sub-ticks. For counts.
         case integer
+        /// Metric-ruler ticks on whole numbers, read like millimeters in a centimeter:
+        /// multiples of 10 100%, 5 70%, 1/4/6/9 40%, 2/3/7/8 20% of tape width. For counts.
+        case metric
     }
 
     @Binding var value: Double
@@ -32,7 +35,7 @@ public struct RibbonColumn: View {
     ///   - range: Allowed values, in real units.
     ///   - step: Snap increment, in real units.
     ///   - valuePerInteger: Real units per integer mark (1,000,000 for price in millions).
-    ///   - tickStyle: `.inch` or `.integer`.
+    ///   - tickStyle: `.inch`, `.integer` or `.metric`.
     ///   - pointsPerInteger: Drawn size of one integer interval, in points.
     ///   - labelEvery: Circle and label only integers that are multiples of this (5 → 5, 10, 15).
     ///     Every integer still gets its full-width tick.
@@ -286,7 +289,14 @@ private struct RibbonColumnTape: View, Animatable {
             let y = mid - CGFloat((mark - position) * ppi) // low values at the bottom
             let sixteenths = Int((i * Double(16 / divisions)).rounded()) // mark in 1/16ths
             let whole = sixteenths % 16 == 0
+            let ones = ((Int(mark.rounded()) % 10) + 10) % 10
             let frac: CGFloat = {
+                if tickStyle == .metric {
+                    if ones == 0 { return 1 }
+                    if ones == 5 { return 0.70 }
+                    if [1, 4, 6, 9].contains(ones) { return 0.40 }
+                    return 0.20
+                }
                 if whole { return 1 }
                 if sixteenths % 8 == 0 { return 0.70 }
                 if sixteenths % 4 == 0 { return 0.50 }
@@ -295,7 +305,8 @@ private struct RibbonColumnTape: View, Animatable {
             }()
             let inRange = mark >= lo - eps && mark <= hi + eps
             let len = w * frac
-            let h: CGFloat = whole ? 2 : 1
+            let major = tickStyle == .metric ? ones == 0 : whole
+            let h: CGFloat = major ? 2 : 1
             context.fill(Path(CGRect(x: w - len, y: y - h / 2, width: len, height: h)),
                          with: .color(Color.black.opacity(inRange ? 0.85 : 0.22)))
 
